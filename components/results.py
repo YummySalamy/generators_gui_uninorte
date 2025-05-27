@@ -167,3 +167,41 @@ def render_load_results(results):
     })
     
     st.table(distribution_df)
+
+def export_results_to_csv(results, system):
+    """Exporta resultados en formato CSV para análisis posterior"""
+    
+    data = {
+        'Parámetro': [],
+        'Generador_1': [],
+        'Generador_2': [],
+        'Total': [],
+        'Unidades': []
+    }
+    
+    # Agregar todos los resultados importantes
+    parameters = [
+        ('Corriente Armadura', results['g1_ia_mag'], results['g2_ia_mag'], '-', 'A'),
+        ('Potencia Activa', results['g1_p'], results['g2_p'], results['g1_p'] + results['g2_p'], 'W'),
+        ('Potencia Reactiva', results['g1_q'], results['g2_q'], results['g1_q'] + results['g2_q'], 'VAr'),
+        ('Ángulo Potencia', np.degrees(results['g1_delta']), np.degrees(results['g2_delta']), '-', '°'),
+        ('Factor Potencia', results['g1_fp'], results['g2_fp'], '-', '-'),
+        ('Eficiencia', results['g1_efficiency']*100, results['g2_efficiency']*100, '-', '%')
+    ]
+    
+    for param, g1_val, g2_val, total_val, unit in parameters:
+        data['Parámetro'].append(param)
+        data['Generador_1'].append(f"{g1_val:.3f}")
+        data['Generador_2'].append(f"{g2_val:.3f}")
+        data['Total'].append(f"{total_val:.3f}" if total_val != '-' else '-')
+        data['Unidades'].append(unit)
+    
+    df = pd.DataFrame(data)
+    csv = df.to_csv(index=False)
+    
+    st.download_button(
+        label="📥 Descargar Resultados (CSV)",
+        data=csv,
+        file_name=f"generadores_sincronos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv"
+    )

@@ -12,6 +12,37 @@ def main():
     )
     
     st.title("Simulador de Generadores Síncronos en Paralelo")
+
+    with st.expander("📚 Marco Teórico"):
+        st.markdown("""
+        ## Generadores Síncronos en Paralelo
+        
+        ### Condiciones de Sincronización
+        Para conectar generadores síncronos en paralelo se requieren **4 condiciones fundamentales**:
+        
+        1. **Igualdad de Voltajes**: |V₁| = |V₂|
+        2. **Igualdad de Frecuencias**: f₁ = f₂
+        3. **Secuencia de Fases**: ABC en ambos generadores
+        4. **Sincronización de Fases**: φ₁ = φ₂
+        
+        ### Reparto de Potencia
+        
+        **Potencia Activa vs Ángulo de Potencia (P-δ):**
+        ```
+        P = (V₁V₂/X) sen(δ)
+        ```
+        
+        **Potencia Reactiva vs Excitación (Q-IF):**
+        ```
+        Q = (V₁V₂/X) cos(δ) - (V₂²/X)
+        ```
+        
+        ### Curva de Capacidad
+        Los límites operativos están dados por:
+        - **Límite Térmico**: Corriente de armadura máxima
+        - **Límite de Excitación**: Corriente de campo máxima  
+        - **Límite de Estabilidad**: Ángulo de potencia crítico
+        """)
     
     # Cargar parámetros desde la barra lateral
     params = render_sidebar()

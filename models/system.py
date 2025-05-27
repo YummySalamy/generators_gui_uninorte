@@ -165,5 +165,70 @@ class GeneratorSystem:
                 "q": q2
             }
         }
+
+        # Calcular factores de potencia
+        results['g1_fp'] = results['g1_p'] / results['g1_s'] if results['g1_s'] != 0 else 0
+        results['g2_fp'] = results['g2_p'] / results['g2_s'] if results['g2_s'] != 0 else 0
+
+        # Calcular eficiencias (aproximadas, sin pérdidas mecánicas detalladas)
+        results['g1_efficiency'] = results['g1_p'] / (results['g1_p'] + results['g1_pcu']) if (results['g1_p'] + results['g1_pcu']) != 0 else 0
+        results['g2_efficiency'] = results['g2_p'] / (results['g2_p'] + results['g2_pcu']) if (results['g2_p'] + results['g2_pcu']) != 0 else 0
+
         
         return results
+    
+    def check_synchronization_conditions(self):
+        """
+        Verifica las condiciones de sincronización según la teoría académica
+        """
+        results = {}
+        
+        # Voltajes nominales
+        v1_nom = self.generator1.v_nom / np.sqrt(3)  # Voltaje de fase
+        v2_nom = self.generator2.v_nom / np.sqrt(3)
+        
+        results['voltage_match'] = abs(v1_nom - v2_nom) < 0.05 * v1_nom  # 5% tolerancia
+        results['voltage_diff_percent'] = abs(v1_nom - v2_nom) / v1_nom * 100
+        
+        # Frecuencias (asumimos 60 Hz nominal)
+        f1 = 120 * 60 / self.generator1.poles
+        f2 = 120 * 60 / self.generator2.poles
+        
+        results['frequency_match'] = abs(f1 - f2) < 0.1  # 0.1 Hz tolerancia
+        results['frequency_diff'] = abs(f1 - f2)
+        
+        # Secuencia de fases (asumimos ABC para ambos)
+        results['phase_sequence_match'] = True  # Simplificación
+        
+        return results
+
+    def analyze_load_sharing(self, results):
+        """
+        Analiza el reparto de potencia activa y reactiva entre generadores
+        """
+        analysis = {}
+        
+        # Potencias individuales
+        p1 = results['g1_p']
+        p2 = results['g2_p']
+        q1 = results['g1_q']
+        q2 = results['g2_q']
+        
+        # Análisis de reparto de potencia activa
+        total_p = p1 + p2
+        analysis['p1_percentage'] = (p1 / total_p) * 100 if total_p > 0 else 0
+        analysis['p2_percentage'] = (p2 / total_p) * 100 if total_p > 0 else 0
+        
+        # Análisis de reparto de potencia reactiva
+        total_q = q1 + q2
+        analysis['q1_percentage'] = (q1 / total_q) * 100 if total_q > 0 else 0
+        analysis['q2_percentage'] = (q2 / total_q) * 100 if total_q > 0 else 0
+        
+        # Verificar estabilidad (ángulos de potencia)
+        delta1 = np.degrees(results['g1_delta'])  # Convertir a grados
+        delta2 = np.degrees(results['g2_delta'])
+        
+        analysis['stability_warning'] = abs(delta1) > 30 or abs(delta2) > 30  # Grados
+        analysis['power_angle_diff'] = abs(delta1 - delta2)
+        
+        return analysis

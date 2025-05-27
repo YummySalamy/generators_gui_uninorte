@@ -1,6 +1,34 @@
 import streamlit as st
 import numpy as np
 
+def validate_generator_params(ra, xs, s_nom, v_nom, fp_nom, poles, if_values, ea_values):
+    """Validar parámetros de entrada para evitar errores físicos"""
+    errors = []
+    
+    # Validaciones físicas básicas
+    if ra <= 0:
+        errors.append("La resistencia de armadura debe ser positiva")
+    if xs <= 0:
+        errors.append("La reactancia síncrona debe ser positiva")
+    if xs < ra:
+        errors.append("Warning: Xs < Ra es inusual en generadores síncronos")
+    if s_nom <= 0:
+        errors.append("La potencia aparente debe ser positiva")
+    if not (0.1 <= fp_nom <= 1.0):
+        errors.append("El factor de potencia debe estar entre 0.1 y 1.0")
+    if poles < 2 or poles % 2 != 0:
+        errors.append("El número de polos debe ser par y ≥ 2")
+    
+    # Validar curva de magnetización
+    if len(if_values) != len(ea_values):
+        errors.append("IF y EA deben tener la misma cantidad de puntos")
+    if not all(if_values[i] <= if_values[i+1] for i in range(len(if_values)-1)):
+        errors.append("Los valores de IF deben estar en orden creciente")
+    if not all(ea_values[i] <= ea_values[i+1] for i in range(len(ea_values)-1)):
+        errors.append("Los valores de EA deben ser crecientes (saturación)")
+    
+    return errors
+
 def render_sidebar():
     """
     Renderiza la barra lateral con todos los inputs necesarios
